@@ -1,699 +1,732 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>La Red de los Corazones Conectados</title>
-  <style>
-    /* =============================================================
-       ESTILOS GENERALES (Alto contraste + tipografías legibles)
-       ============================================================= */
-    :root{
-      --bg: #0b1221;           /* Fondo oscuro espacial */
-      --panel: #0f1b39;        /* Paneles */
-      --text: #ffffff;         /* Texto alto contraste */
-      --accent: #35e0ff;       /* Cian neón */
-      --accent2: #ff71d4;      /* Rosa neón */
-      --success: #29e07a;      /* Verde éxito */
-      --warn: #ffb84d;         /* Ámbar para hints */
-      --error: #ff5a5a;        /* Rojo error */
-    }
-    *{box-sizing: border-box}
-    html,body{height:100%}
-    body{
-      margin:0; background: radial-gradient(1200px 800px at 80% -10%, #14244f 0%, var(--bg) 55%) no-repeat, var(--bg);
-      color:var(--text); font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-      overflow:hidden;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Red Mágica - Kids Edition</title>
+    <style>
+        /* --- ESTÉTICA DIVERTIDA Y ESPACIAL --- */
+        :root {
+            --bg-deep: #1a0b2e;
+            --neon-blue: #00f3ff;
+            --neon-pink: #ff00cc;
+            --neon-green: #39ff14;
+            --neon-yellow: #fff01f;
+            --overlay-bg: rgba(0, 0, 0, 0.85);
+        }
 
-    /* Contenedor principal responsivo */
-    .wrap{position:relative; height:100%; width:100%;}
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: var(--bg-deep);
+            /* Estrellas animadas en CSS */
+            background-image: 
+                radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 4px),
+                radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 2px);
+            background-size: 550px 550px, 350px 350px;
+            font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif; /* Fuente amigable */
+            touch-action: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-    /* Botones accesibles */
-    button, .btn{
-      background:linear-gradient(180deg, var(--accent), #1ea4b8);
-      color:#001318; border:none; border-radius:14px; padding:12px 16px; font-size:1rem; font-weight:700; cursor:pointer;
-      box-shadow: 0 6px 18px rgba(0,0,0,.4), inset 0 0 0 2px rgba(255,255,255,.15);
-    }
-    button:focus-visible{outline:3px solid #fff; outline-offset:2px}
-    .btn.secondary{background:linear-gradient(180deg, var(--accent2), #a93c89); color:#19000f}
-    .btn.ghost{background:transparent; border:2px solid var(--accent); color:var(--accent)}
+        /* Animación de fondo */
+        @keyframes spaceMove {
+            from { background-position: 0 0, 0 0; }
+            to { background-position: -50px -50px, -30px -30px; }
+        }
+        body { animation: spaceMove 20s linear infinite; }
 
-    /* Panel superior con accesibilidad y estado */
-    .hud{
-      position:absolute; inset:0 auto auto 0; right:0; height:64px; display:flex; align-items:center; gap:10px; padding:8px 12px; z-index:30;
-      background: linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.1)); backdrop-filter: blur(6px);
-    }
-    .hud > *{display:flex; align-items:center; gap:8px}
-    .badge{background:var(--panel); padding:8px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.12)}
-    .progress{height:12px; width:160px; background:#122041; border-radius:999px; overflow:hidden; border:1px solid rgba(255,255,255,.15)}
-    .progress > i{display:block; height:100%; width:0; background: linear-gradient(90deg, var(--success), #94ffd1)}
+        /* --- CAPAS --- */
+        #game-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        #particles-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
 
-    /* Escenas / pantallas */
-    .scene{position:absolute; inset:0; display:none}
-    .scene.active{display:block}
+        /* --- ELEMENTOS DE JUEGO --- */
+        svg { width: 100%; height: 100%; }
+        
+        .connection-line {
+            stroke: var(--neon-yellow);
+            stroke-width: 12; /* Más grueso para niños */
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            filter: drop-shadow(0 0 8px var(--neon-yellow));
+            transition: stroke 0.3s;
+        }
+        
+        .temp-line {
+            stroke: var(--neon-blue);
+            stroke-dasharray: 20, 10;
+            opacity: 0.7;
+            animation: dash 1s linear infinite;
+        }
 
-    /* Estrellas decorativas */
-    .stars{position:absolute; inset:0; pointer-events:none; background-image: radial-gradient(#fff, rgba(255,255,255,0) 60%);
-      background-size:2px 2px; opacity:.35; mask-image: radial-gradient(1000px 600px at 50% 50%, #000 50%, transparent 100%);
-    }
+        @keyframes dash { to { stroke-dashoffset: -30; } }
 
-    /* OBSERVATORIO (Introducción) */
-    .observatorio{display:grid; grid-template-columns: 1.2fr 1fr; gap:18px; height:100%; padding:24px}
-    .card{
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
-      border:1px solid rgba(255,255,255,.15); border-radius:16px; padding:18px; box-shadow: 0 10px 25px rgba(0,0,0,.35);
-    }
-    .title{font-size:clamp(22px, 3vw, 34px); font-weight:900; letter-spacing:.4px}
-    .subtitle{opacity:.8}
-    .demo-net{height:100%; border-radius:16px; position:relative; overflow:hidden}
-    .demo-net svg{position:absolute; inset:0; width:100%; height:100%}
+        .planet {
+            position: absolute;
+            width: 90px; /* Más grandes */
+            height: 90px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #fff, #5e72eb);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 50px;
+            box-shadow: 0 0 20px rgba(94, 114, 235, 0.6), inset -5px -5px 10px rgba(0,0,0,0.3);
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            z-index: 5;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 4px solid white;
+        }
 
-    /* MAPA GALÁCTICO */
-    .mapa{position:absolute; inset:0;}
-    .canvas{position:absolute; inset:0}
-    svg.lines{position:absolute; inset:0; width:100%; height:100%; pointer-events:none}
-    .planeta{position:absolute; width:90px; height:90px; border-radius:999px; background: radial-gradient(circle at 35% 30%, #fff8 0%, #ffffff10 50%, #00000055 100%),
-      linear-gradient(180deg, #2853ff, #6e2eff);
-      border:2px solid rgba(255,255,255,.25); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; cursor:pointer;
-      box-shadow: 0 10px 24px rgba(0,0,0,.55), inset 0 0 22px rgba(255,255,255,.18);
-      transition: transform .2s ease;
-    }
-    .planeta:focus-visible{outline:3px solid #fff}
-    .planeta .avatar{font-size:30px}
-    .planeta .name{font-size:.85rem; font-weight:800; text-shadow:0 2px 6px rgba(0,0,0,.6)}
-    .planeta .need{font-size:22px}
-    .planeta .meter{position:absolute; bottom:-8px; left:50%; transform:translateX(-50%); width:86px; height:10px; background:#0d1430; border:1px solid rgba(255,255,255,.2); border-radius:999px; overflow:hidden}
-    .planeta .meter i{display:block; height:100%; width:0; background: linear-gradient(90deg, #ff9bbb, #ff3a86)}
-    .planeta.selected{transform:scale(1.08)}
-    .planeta.hint{box-shadow: 0 0 0 2px var(--warn), 0 10px 24px rgba(0,0,0,.55)}
+        .planet:active { transform: translate(-50%, -50%) scale(0.9); }
+        .planet.pop { animation: pop 0.4s ease; }
+        
+        @keyframes pop {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.3); }
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
 
-    /* Indicadores e iconos grandes */
-    .legend{position:absolute; left:12px; bottom:12px; display:flex; gap:8px; flex-wrap:wrap; max-width:min(95vw, 800px);}
-    .legend .legend-item{background:rgba(0,0,0,.45); padding:8px 10px; border:1px solid rgba(255,255,255,.15); border-radius:12px; font-size:.95rem}
+        /* Burbuja de pensamiento (ICONOS en vez de texto) */
+        .thought-bubble {
+            position: absolute;
+            top: -70px;
+            background: white;
+            border-radius: 20px;
+            padding: 5px 15px;
+            font-size: 30px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            animation: float 3s ease-in-out infinite;
+            border: 3px solid var(--neon-pink);
+            pointer-events: none;
+        }
+        .thought-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 10px 10px 0;
+            border-style: solid;
+            border-color: var(--neon-pink) transparent transparent transparent;
+        }
 
-    /* Pantalla final */
-    .final{display:grid; place-items:center; text-align:center; padding:24px}
-    .final .net{width:min(900px, 92vw); height:60vh; border-radius:18px; background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)); border:1px solid rgba(255,255,255,.15); position:relative; overflow:hidden}
-    .final h1{font-size:clamp(26px, 4.5vw, 44px)}
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
-    /* Controles de accesibilidad */
-    .a11y{margin-left:auto}
-    .toggle{display:flex; gap:6px; align-items:center}
-    .toggle input{width:44px; height:24px}
+        /* --- PERSONAJE ROBOT TUTORIAL --- */
+        #robot-guide {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle, #ddd, #999);
+            border-radius: 50%;
+            border: 5px solid var(--neon-blue);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 70px;
+            z-index: 100;
+            box-shadow: 0 0 20px var(--neon-blue);
+            pointer-events: auto;
+            transition: transform 0.2s;
+        }
+        #robot-guide.talking { animation: talk 0.2s infinite alternate; }
+        @keyframes talk { from { transform: scale(1); } to { transform: scale(1.05); } }
 
-    /* Móvil: layout intro a una columna */
-    @media (max-width: 900px){
-      .observatorio{grid-template-columns:1fr; padding-bottom:100px}
-      .hud{height:auto; flex-wrap:wrap; justify-content:center; gap:8px}
-      .planeta{width:76px; height:76px}
-      .planeta .avatar{font-size:26px}
-      .planeta .name{font-size:.8rem}
-      .planeta .need{font-size:18px}
-      .planeta .meter{width:72px}
-    }
-  </style>
+        /* --- UI OVERLAY & DIALOGOS --- */
+        #dialog-box {
+            position: absolute;
+            bottom: 30px;
+            left: 160px; /* Al lado del robot */
+            right: 20px;
+            background: white;
+            border-radius: 30px;
+            padding: 20px;
+            border: 5px solid var(--neon-blue);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            pointer-events: auto;
+            max-width: 600px;
+        }
+
+        #dialog-text {
+            font-size: 1.5rem;
+            color: #333;
+            margin: 0 0 15px 0;
+            font-weight: bold;
+        }
+
+        /* Botón Siguiente (Flecha gigante) */
+        .big-btn {
+            background: var(--neon-green);
+            border: none;
+            padding: 10px 40px;
+            border-radius: 50px;
+            font-size: 2rem;
+            color: #000;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #2db30e;
+            transition: transform 0.1s;
+            align-self: flex-end;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .big-btn:active { transform: translateY(5px); box-shadow: none; }
+        .big-btn span { font-size: 1.2rem; font-weight: bold; }
+
+        /* MANO FANTASMA TUTORIAL */
+        #ghost-hand {
+            position: absolute;
+            font-size: 80px;
+            pointer-events: none;
+            z-index: 50;
+            display: none;
+            filter: drop-shadow(0 0 10px white);
+        }
+
+        @keyframes hand-drag {
+            0% { transform: translate(0, 0) scale(1); }
+            20% { transform: translate(0, 0) scale(0.9); } /* Press */
+            80% { transform: translate(var(--tx), var(--ty)) scale(0.9); } /* Drag */
+            100% { transform: translate(var(--tx), var(--ty)) scale(1); opacity: 0; } /* Release */
+        }
+
+        /* PARTÍCULAS */
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: fadeOut 1s forwards;
+        }
+        @keyframes fadeOut { to { opacity: 0; transform: scale(0); } }
+
+        /* PANTALLA INICIO */
+        #start-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+        #start-screen h1 { font-size: 3rem; color: var(--neon-yellow); text-shadow: 0 0 10px red; text-align: center; }
+
+    </style>
 </head>
 <body>
-<div class="wrap" aria-live="polite">
-  <!-- HUD superior: progreso, galaxia, accesibilidad -->
-  <div class="hud" role="region" aria-label="Barra de estado y accesibilidad">
-    <div class="badge" title="Conexiones completadas" aria-label="Conexiones completadas">
-      ⭐ Progreso
-      <div class="progress" aria-hidden="true"><i id="progressBar"></i></div>
-      <span id="progressText" style="font-weight:800">0/0</span>
+
+    <!-- Pantalla de Inicio (Necesaria para habilitar audio y voz) -->
+    <div id="start-screen">
+        <h1>🌌 Red Mágica 🌌</h1>
+        <p style="font-size: 1.5rem;">¡Conecta los corazones!</p>
+        <button class="big-btn" onclick="startGame()">
+            <span>JUGAR</span> ▶️
+        </button>
     </div>
 
-    <div class="badge" aria-label="Galaxia actual">
-      🌌 <span id="galaxyName">Galaxia 1</span>
+    <div id="game-container">
+        <svg id="connections-layer"></svg>
+        <!-- Planetas inyectados por JS -->
     </div>
 
-    <div class="badge a11y">
-      <div class="toggle" title="Narración por voz">
-        <label for="voiceToggle">🔊 Narración</label>
-        <input id="voiceToggle" type="checkbox" aria-label="Activar o desactivar narración" checked />
-      </div>
-      <div class="toggle" title="Sonidos del juego">
-        <label for="soundToggle">🎵 Sonidos</label>
-        <input id="soundToggle" type="checkbox" aria-label="Activar o desactivar sonidos" checked />
-      </div>
-      <button class="btn ghost" id="btnAlbum" aria-label="Abrir álbum de momentos conectados">📸 Álbum</button>
-    </div>
-  </div>
+    <!-- Capa de efectos -->
+    <div id="particles-layer"></div>
 
-  <!-- Estrellas decorativas -->
-  <div class="stars"></div>
-
-  <!-- =====================
-       PANTALLA: INTRO
-       ===================== -->
-  <section id="screenIntro" class="scene active" aria-label="Observatorio Cósmico">
-    <div class="observatorio">
-      <div class="card" role="dialog" aria-labelledby="introTitle" aria-describedby="introDesc">
-        <div class="title" id="introTitle">🛰️ Observatorio Cósmico</div>
-        <p class="subtitle" id="introDesc">
-          Bienvenid@, explorador@. Soy la <strong>Guía de la Galaxia</strong>. Hoy aprenderás que Internet es una <strong>red</strong> que conecta personas y cosas para <em>compartir ideas, juegos y mensajes</em>.
-        </p>
-        <ol>
-          <li><strong>Concepto de Red:</strong> Conecta dos planetas con un hilo para formar una red.</li>
-          <li><strong>Internet como Comunidad:</strong> Los habitantes conectados pueden saludarse y colaborar.</li>
-          <li><strong>Juegos, Ideas y Mensajes:</strong> Verás iconos viajando por los hilos cuando crees conexiones.</li>
-        </ol>
-        <p><strong>Mensaje:</strong> “Escucha las necesidades de cada habitante y conecta a las personas adecuadas para ayudarlas”.</p>
-        <div style="display:flex; gap:8px; flex-wrap:wrap">
-          <button class="btn" id="btnStart">¡Comenzar Misión!</button>
-          <button class="btn secondary" id="btnNarrarIntro">🔊 Escuchar Briefing</button>
+    <!-- UI -->
+    <div id="ui-layer">
+        <!-- Robot Guía -->
+        <div id="robot-guide">🤖</div>
+        
+        <!-- Caja de Diálogo -->
+        <div id="dialog-box" style="display: none;">
+            <p id="dialog-text">...</p>
+            <button id="dialog-btn" class="big-btn">▶️</button>
         </div>
-      </div>
 
-      <!-- Mini demostración de red animada (SVG) -->
-      <div class="demo-net card" aria-hidden="true">
-        <svg id="demoSvg" viewBox="0 0 600 380" preserveAspectRatio="xMidYMid slice">
-          <defs>
-            <filter id="glow"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-          </defs>
-          <g id="demoNodes" fill="#fff">
-            <circle cx="100" cy="70" r="14" fill="#6cf"/>
-            <circle cx="250" cy="120" r="14" fill="#f6c"/>
-            <circle cx="420" cy="80" r="14" fill="#fc6"/>
-            <circle cx="160" cy="280" r="14" fill="#9f6"/>
-            <circle cx="520" cy="260" r="14" fill="#6ff"/>
-          </g>
-          <g id="demoLines" stroke="#9cf" stroke-width="3" stroke-linecap="round" filter="url(#glow)"></g>
-          <g id="demoFlow" font-size="18"><text x="0" y="0">🎮</text><text x="0" y="0">💡</text><text x="0" y="0">✉️</text></g>
-        </svg>
-      </div>
+        <!-- Mano Tutorial -->
+        <div id="ghost-hand">👆</div>
     </div>
-  </section>
 
-  <!-- =====================
-       PANTALLA: JUEGO
-       ===================== -->
-  <section id="screenGame" class="scene" aria-label="Mapa estelar interactivo">
-    <div class="mapa" id="mapa">
-      <!-- SVG para líneas -->
-      <svg class="lines" id="lines" viewBox="0 0 1000 700" preserveAspectRatio="none" aria-hidden="true"></svg>
-      <!-- Planetas se inyectan dinámicamente como divs .planeta -->
-      <div class="legend" aria-label="Leyenda de iconos">
-        <div class="legend-item">🎮 Juegos</div>
-        <div class="legend-item">💡 Clase / Ideas</div>
-        <div class="legend-item">✉️ Mensajes / Videollamada</div>
-        <div class="legend-item">🎸 Música</div>
-        <div class="legend-item">🎂 Pastel</div>
-        <div class="legend-item">🎈 Decoraciones</div>
-      </div>
-    </div>
-  </section>
+    <canvas id="confetti-canvas" style="position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:999;"></canvas>
 
-  <!-- =====================
-       PANTALLA: FINAL
-       ===================== -->
-  <section id="screenFinal" class="scene final" aria-label="Red completa formada">
-    <div>
-      <h1>✨ ¡Misión cumplida! ¡La red de corazones brilla en toda la galaxia! ✨</h1>
-      <p id="finalPhrase" style="opacity:.9; max-width:840px; margin:0 auto 12px">Has conectado a familias, jugadores, estudiantes y amig@s. Internet es una comunidad para <strong>interactuar</strong>, <strong>colaborar</strong> y <strong>compartir</strong>.</p>
-      <div class="net" id="finalNet" aria-hidden="true"></div>
-      <div style="display:flex; gap:8px; justify-content:center; margin-top:14px">
-        <button class="btn" id="btnNextGalaxy">🚀 Desbloquear nueva galaxia</button>
-        <button class="btn ghost" id="btnReplay">🔁 Volver a jugar</button>
-      </div>
-    </div>
-  </section>
-</div>
+    <script>
+        // --- DATOS DEL JUEGO (Simplificados para niños) ---
+        const LEVELS = [
+            {
+                id: 1,
+                narrative: [
+                    "¡Hola! Soy Robo. 🤖",
+                    "La niña extraña a su abuela. 😢",
+                    "¡Ayuda a conectarlas! ⚡"
+                ],
+                hint: "Arrastra de la niña a la abuela",
+                planets: [
+                    { id: 'girl', emoji: '👧', want: '👵', x: 20, y: 50 },
+                    { id: 'grandma', emoji: '👵', want: '👧', x: 80, y: 50 }
+                ],
+                connections: [['girl', 'grandma']]
+            },
+            {
+                id: 2,
+                narrative: [
+                    "¡Bien hecho! 🎉",
+                    "Mira, un coche de carreras. 🏎️",
+                    "¡Quiere jugar con el niño gamer! 🎮"
+                ],
+                hint: "Conecta los juguetes",
+                planets: [
+                    { id: 'gamer', emoji: '🎮', want: '🏎️', x: 30, y: 30 },
+                    { id: 'car', emoji: '🏎️', want: '🎮', x: 70, y: 70 }
+                ],
+                connections: [['gamer', 'car']]
+            },
+            {
+                id: 3,
+                narrative: [
+                    "¡Eres genial! 🌟",
+                    "El Profe quiere enseñar Dinosaurios. 🦖",
+                    "¡Conecta a TODOS los niños con el Profe!"
+                ],
+                hint: "Une al profe con los 3 niños",
+                planets: [
+                    { id: 'teach', emoji: '👨‍🏫', want: '🎓', x: 50, y: 20 },
+                    { id: 'k1', emoji: '👦', want: '🦖', x: 20, y: 80 },
+                    { id: 'k2', emoji: '👧', want: '🦖', x: 50, y: 80 },
+                    { id: 'k3', emoji: '🧑', want: '🦖', x: 80, y: 80 }
+                ],
+                connections: [['teach', 'k1'], ['teach', 'k2'], ['teach', 'k3']]
+            },
+            {
+                id: 4,
+                narrative: [
+                    "¡Última misión! 🚀",
+                    "Es el cumple del León. 🦁",
+                    "¡Lleva la fiesta al León!"
+                ],
+                hint: "Música y pastel para el león",
+                planets: [
+                    { id: 'lion', emoji: '🦁', want: '❤️', x: 50, y: 50 },
+                    { id: 'music', emoji: '🎸', want: '🦁', x: 15, y: 20 },
+                    { id: 'cake', emoji: '🎂', want: '🦁', x: 85, y: 20 },
+                    { id: 'balloons', emoji: '🎈', want: '🦁', x: 50, y: 85 }
+                ],
+                connections: [['music', 'lion'], ['cake', 'lion'], ['balloons', 'lion']]
+            }
+        ];
 
-<!-- =============================
-     LÓGICA DEL JUEGO (JavaScript)
-     ============================= -->
-<script>
-/*
-  =============================================
-  ARQUITECTURA DEL JUEGO
-  ---------------------------------------------
-  - Pantalla de introducción con narración (SpeechSynthesis).
-  - Pantalla de mapa estelar: planetas (nodos) y líneas (aristas) en SVG.
-  - Mecánica: seleccionar un planeta (origen) y luego un objetivo compatible.
-  - Conexiones especiales:
-      * 1 a 1 (Videollamada Familiar, Partida de Videojuegos)
-      * 1 a muchos (Clase Virtual)
-      * muchos a 1 (Fiesta Sorpresa)
-  - Barras de felicidad por planeta y barra global de progreso.
-  - Sonidos con WebAudio (éxito, error, especial).
-  - Rejugabilidad: desbloqueo de segunda galaxia + Álbum de Momentos en localStorage.
-  - Accesibilidad: texto legible, alto contraste, grandes iconos, controles de audio, narración activable.
-*/
+        // --- ESTADO GLOBAL ---
+        let currentLevelIdx = 0;
+        let dialogueStep = 0;
+        let isGameplayActive = false;
+        let activeLine = null;
+        let startPlanet = null;
+        let completedPairs = [];
+        let synth = window.speechSynthesis;
+        let voice = null;
 
-/*********************** UTILIDADES AUDIO ************************/
-const AudioKit = (()=>{
-  const ctx = new (window.AudioContext || window.webkitAudioContext)();
-  let enabled = true;
-  const setEnabled = v=> enabled = v;
-  function beep({type="sine", freq=440, dur=0.18, gain=0.12}){
-    if(!enabled) return;
-    const o = ctx.createOscillator();
-    const g = ctx.createGain();
-    o.type=type; o.frequency.value=freq; g.gain.value=gain;
-    o.connect(g).connect(ctx.destination);
-    o.start();
-    o.stop(ctx.currentTime+dur);
-  }
-  function chordSuccess(){
-    beep({type:"triangle", freq:740, dur:.12});
-    setTimeout(()=>beep({type:"triangle", freq:880, dur:.18}), 110);
-    setTimeout(()=>beep({type:"sine", freq:1175, dur:.22}), 220);
-  }
-  function softError(){
-    beep({type:"sawtooth", freq:220, dur:.12, gain:.09});
-    setTimeout(()=>beep({type:"sawtooth", freq:180, dur:.16, gain:.08}), 120);
-  }
-  function sparkle(){
-    [1320,1760,2340].forEach((f,i)=> setTimeout(()=> beep({type:"square", freq:f, dur:.08}), i*90));
-  }
-  return {chordSuccess, softError, sparkle, setEnabled};
-})();
+        // Elementos DOM
+        const gameContainer = document.getElementById('game-container');
+        const svgLayer = document.getElementById('connections-layer');
+        const dialogBox = document.getElementById('dialog-box');
+        const dialogText = document.getElementById('dialog-text');
+        const dialogBtn = document.getElementById('dialog-btn');
+        const robot = document.getElementById('robot-guide');
+        const ghostHand = document.getElementById('ghost-hand');
 
-/*********************** NARRACIÓN ************************/
-const Narrator = (()=>{
-  let enabled = true;
-  const setEnabled = v=> enabled = v;
-  function speak(text){
-    if(!enabled) return;
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = "es-MX";
-    u.rate = 1.0; u.pitch = 1.02;
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(u);
-  }
-  return {speak, setEnabled};
-})();
-
-/*********************** DATOS DE GALAXIAS ************************/
-// Definimos dos galaxias (niveles). Cada planeta tiene:
-// id, nombre, emoji avatar, rol, tags de compatibilidad, tipo de necesidad y reglas.
-
-const GALAXIES = [
-  {
-    name: "Galaxia 1",
-    width: 1000, height: 700,
-    nodes: [
-      {id:"anita", name:"Anita", avatar:"🧑‍🚀", need:"✉️", role:"persona", tags:["familia"], x:120,y:140},
-      {id:"abu", name:"Abuela", avatar:"👵", need:"✉️", role:"persona", tags:["familia"], x:300,y:100},
-
-      {id:"paco", name:"Paco", avatar:"🧑", need:"🎮", role:"persona", tags:["juegos"], x:140,y:480},
-      {id:"lola", name:"Lola", avatar:"👧", need:"🎮", role:"persona", tags:["juegos"], x:360,y:520},
-
-      {id:"profe", name:"Maestro", avatar:"🧑‍🏫", need:"💡", role:"maestro", tags:["dino"], x:720,y:140},
-      {id:"nina1", name:"Sofi", avatar:"🧒", need:"💡", role:"alumno", tags:["dino"], x:860,y:260},
-      {id:"nino2", name:"Timo", avatar:"👦", need:"💡", role:"alumno", tags:["dino"], x:640,y:280},
-      {id:"nina3", name:"Mia", avatar:"👧", need:"💡", role:"alumno", tags:["dino"], x:820,y:380},
-
-      {id:"leo", name:"Leo", avatar:"🧑‍🚀", need:"✨", role:"cumple", tags:["fiesta"], x:520,y:420},
-      {id:"rita", name:"Rita", avatar:"🧑‍🎤", need:"🎸", role:"musica", tags:["fiesta"], x:620,y:540},
-      {id:"tomas", name:"Tomás", avatar:"🧑‍🍳", need:"🎂", role:"pastel", tags:["fiesta"], x:520,y:620},
-      {id:"sara", name:"Sara", avatar:"🧑", need:"🎈", role:"deco", tags:["fiesta"], x:740,y:500}
-    ],
-    goals:[
-      {id:"videollamada", type:"oneToOne", a:"anita", b:"abu", icon:"✉️", announce:"Familia: ¡La red acorta la distancia, y nos une en la misma estancia!"},
-      {id:"gamers", type:"oneToOne", a:"paco", b:"lola", icon:"🎮", announce:"Jugadores: ¡Con un simple clic, la diversión hace un tic!"},
-      {id:"clase", type:"oneToMany", a:"profe", bs:["nina1","nino2","nina3"], icon:"💡", announce:"Clase Virtual conectada: ¡conocimiento que viaja por la red!"},
-      {id:"fiesta", type:"manyToOne", bs:["rita","tomas","sara"], a:"leo", icon:"✨", announce:"¡Fiesta sorpresa lista! Leo vuelve a sonreír."}
-    ]
-  },
-  {
-    name: "Galaxia 2",
-    width: 1000, height: 700,
-    nodes: [
-      {id:"ana2", name:"Ana", avatar:"🧑‍🚀", need:"✉️", role:"persona", tags:["familia"], x:140,y:160},
-      {id:"tia2", name:"Tía", avatar:"👩", need:"✉️", role:"persona", tags:["familia"], x:320,y:80},
-      {id:"gamer1", name:"Kai", avatar:"👦", need:"🎮", role:"persona", tags:["juegos"], x:220,y:520},
-      {id:"gamer2", name:"Nora", avatar:"👧", need:"🎮", role:"persona", tags:["juegos"], x:420,y:560},
-      {id:"profe2", name:"Maestra", avatar:"👩‍🏫", need:"💡", role:"maestro", tags:["arte"], x:700,y:160},
-      {id:"al1", name:"Gus", avatar:"👦", need:"💡", role:"alumno", tags:["arte"], x:880,y:300},
-      {id:"al2", name:"Lia", avatar:"👧", need:"💡", role:"alumno", tags:["arte"], x:660,y:320},
-      {id:"al3", name:"Pili", avatar:"👧", need:"💡", role:"alumno", tags:["arte"], x:840,y:420},
-      {id:"cumple2", name:"Niko", avatar:"🧑", need:"✨", role:"cumple", tags:["fiesta"], x:540,y:440},
-      {id:"mus2", name:"DJ", avatar:"🧑‍🎤", need:"🎸", role:"musica", tags:["fiesta"], x:640,y:560},
-      {id:"pas2", name:"Chef", avatar:"🧑‍🍳", need:"🎂", role:"pastel", tags:["fiesta"], x:520,y:640},
-      {id:"dec2", name:"Deco", avatar:"🧑", need:"🎈", role:"deco", tags:["fiesta"], x:740,y:520}
-    ],
-    goals:[
-      {id:"family2", type:"oneToOne", a:"ana2", b:"tia2", icon:"✉️", announce:"Familia conectada de nuevo."},
-      {id:"game2", type:"oneToOne", a:"gamer1", b:"gamer2", icon:"🎮", announce:"¡Partida lista!"},
-      {id:"class2", type:"oneToMany", a:"profe2", bs:["al1","al2","al3"], icon:"💡", announce:"Clase creativa conectada."},
-      {id:"party2", type:"manyToOne", bs:["mus2","pas2","dec2"], a:"cumple2", icon:"✨", announce:"¡Fiesta activada!"}
-    ]
-  }
-];
-
-/*********************** ESTADO GLOBAL ************************/
-let current = 0; // índice de galaxia
-let state = null; // estado de partida generado desde la galaxia
-let selected = null; // planeta seleccionado (origen)
-let completedConnections = 0; // conexiones logradas (para la barra global)
-let totalConnections = 0; // total de conexiones requeridas
-let album = JSON.parse(localStorage.getItem("album_conectado")||"[]");
-let hintTimer = null;
-
-/*********************** INICIALIZACIÓN ************************/
-const $ = s=> document.querySelector(s);
-const $$ = s=> [...document.querySelectorAll(s)];
-
-const screens = { intro: $("#screenIntro"), game: $("#screenGame"), final: $("#screenFinal") };
-const progressBar = $("#progressBar");
-const progressText = $("#progressText");
-const galaxyName = $("#galaxyName");
-const linesSvg = $("#lines");
-const mapa = $("#mapa");
-
-$("#voiceToggle").addEventListener("change", e=> Narrator.setEnabled(e.target.checked));
-$("#soundToggle").addEventListener("change", e=> AudioKit.setEnabled(e.target.checked));
-$("#btnAlbum").addEventListener("click", showAlbum);
-
-$("#btnStart").addEventListener("click", ()=>{
-  startGame(0); // Empieza en Galaxia 1
-});
-
-$("#btnNarrarIntro").addEventListener("click", narrarIntro);
-$("#btnReplay").addEventListener("click", ()=> startGame(current));
-$("#btnNextGalaxy").addEventListener("click", ()=> startGame(Math.min(current+1, GALAXIES.length-1)));
-
-function narrarIntro(){
-  Narrator.speak("Bienvenidos al Observatorio Cósmico. Aquí entenderás que Internet es una red. Cuando conectas planetas, las ideas, los juegos y los mensajes pueden viajar. Tu misión es escuchar las necesidades y conectar a quienes pueden ayudarse. ¡Listo para despegar!");
-}
-
-/*********************** GENERACIÓN DE PARTIDA ************************/
-function startGame(galaxyIndex){
-  current = galaxyIndex;
-  const g = GALAXIES[current];
-  galaxyName.textContent = g.name;
-  state = {
-    nodes: JSON.parse(JSON.stringify(g.nodes)), // clonar
-    goals: JSON.parse(JSON.stringify(g.goals)),
-    made: { } // registro de enlaces por meta
-  };
-  selected = null;
-  completedConnections = 0;
-  // Cada meta cuenta como 1 paso para progreso, pero algunas son múltiples conexiones.
-  totalConnections = state.goals.length;
-  updateProgress();
-  // Render UI
-  showScene("game");
-  renderMap();
-  Narrator.speak("Mapa estelar desplegado. Selecciona un planeta para ver su necesidad y busca con quién conectarlo.");
-  resetHintTimer();
-}
-
-function showScene(name){
-  Object.values(screens).forEach(sc=> sc.classList.remove("active"));
-  screens[name].classList.add("active");
-}
-
-/*********************** RENDER DEL MAPA ************************/
-function renderMap(){
-  // Limpiar líneas y planetas previos
-  linesSvg.innerHTML = "";
-  $$(".planeta").forEach(n=> n.remove());
-
-  const g = GALAXIES[current];
-  const {width, height} = g;
-  linesSvg.setAttribute("viewBox", `0 0 ${width} ${height}`);
-
-  // Crear planetas
-  state.nodes.forEach(n=>{
-    const el = document.createElement("button");
-    el.className = "planeta";
-    el.style.left = (n.x / width * 100) + "%";
-    el.style.top  = (n.y / height * 100) + "%";
-    el.setAttribute("aria-label", `${n.name}. Necesidad ${n.need}.`);
-    el.dataset.id = n.id;
-    el.innerHTML = `
-      <div class="avatar" aria-hidden="true">${n.avatar}</div>
-      <div class="name">${n.name}</div>
-      <div class="need" title="Necesidad">${n.need}</div>
-      <div class="meter" aria-hidden="true"><i></i></div>
-    `;
-    el.addEventListener("click", ()=> onPlanetClick(n.id));
-    mapa.appendChild(el);
-  });
-}
-
-/*********************** INTERACCIÓN DE CONEXIONES ************************/
-function onPlanetClick(id){
-  resetHintTimer();
-  const node = state.nodes.find(n=> n.id===id);
-  const btn = document.querySelector(`.planeta[data-id="${id}"]`);
-
-  // Primer clic: seleccionar origen
-  if(!selected){
-    selected = node;
-    highlightSelection();
-    Narrator.speak(`${node.name} necesita ${node.need}. Busca con quién conectarlo.`);
-    return;
-  }
-
-  // Segundo clic: intentar conexión
-  if(selected.id === node.id){
-    // Deselección
-    selected = null; highlightSelection(); return;
-  }
-
-  const res = tryConnect(selected, node);
-  if(res.ok){
-    drawConnection(selected, node, res.goal.icon);
-    bumpHappiness(selected.id);
-    bumpHappiness(node.id);
-    announceSuccess(res.goal);
-    maybeCompleteGoal(res.goal);
-    selected = null; highlightSelection();
-  } else {
-    AudioKit.softError();
-    Narrator.speak("Ellos no buscan lo mismo, sigue buscando");
-  }
-}
-
-function highlightSelection(){
-  $$(".planeta").forEach(p=> p.classList.remove("selected"));
-  if(selected){
-    const b = document.querySelector(`.planeta[data-id="${selected.id}"]`);
-    b && b.classList.add("selected");
-  }
-}
-
-// Reglas de conexión por meta
-function tryConnect(a, b){
-  for(const goal of state.goals){
-    if(goal.done) continue;
-    if(goal.type === "oneToOne"){ // 1 a 1: pares exactos a-b
-      if((a.id===goal.a && b.id===goal.b) || (a.id===goal.b && b.id===goal.a)){
-        goal.done = true; state.made[goal.id] = [[a.id,b.id]]; return {ok:true, goal};
-      }
-    }
-    if(goal.type === "oneToMany"){ // a -> varios b
-      if(a.id===goal.a && goal.bs.includes(b.id)){
-        const arr = state.made[goal.id] || []; // pares realizados
-        if(!arr.find(([x,y])=> y===b.id)){
-          arr.push([a.id,b.id]); state.made[goal.id]=arr;
-          if(arr.length===goal.bs.length) goal.done = true;
-          return {ok:true, goal};
+        // --- INICIO ---
+        function startGame() {
+            document.getElementById('start-screen').style.display = 'none';
+            // Intentar obtener voz en español
+            let voices = synth.getVoices();
+            voice = voices.find(v => v.lang.startsWith('es')) || voices[0];
+            
+            initAudioContext(); // Habilitar audio Web Audio API
+            loadLevel(0);
         }
-      }
-      if(b.id===goal.a && goal.bs.includes(a.id)){
-        const arr = state.made[goal.id] || [];
-        if(!arr.find(([x,y])=> y===a.id)){
-          arr.push([b.id,a.id]); state.made[goal.id]=arr;
-          if(arr.length===goal.bs.length) goal.done = true;
-          return {ok:true, goal};
+
+        // --- SISTEMA DE NIVELES Y DIÁLOGO ---
+        function loadLevel(idx) {
+            currentLevelIdx = idx;
+            dialogueStep = 0;
+            completedPairs = [];
+            isGameplayActive = false;
+            
+            // Limpiar
+            gameContainer.querySelectorAll('.planet').forEach(e => e.remove());
+            svgLayer.innerHTML = '';
+            
+            if (idx >= LEVELS.length) {
+                congratulateFinish();
+                return;
+            }
+
+            const level = LEVELS[idx];
+
+            // Renderizar Planetas
+            level.planets.forEach(p => {
+                const el = document.createElement('div');
+                el.className = 'planet';
+                el.id = p.id;
+                el.innerHTML = `${p.emoji} <div class="thought-bubble">${p.want}</div>`;
+                el.style.left = p.x + '%';
+                el.style.top = p.y + '%';
+                // Animación de entrada
+                el.style.transform = 'translate(-50%, -50%) scale(0)';
+                setTimeout(() => el.style.transform = 'translate(-50%, -50%) scale(1)', 100 + Math.random()*300);
+                
+                // Eventos
+                el.addEventListener('mousedown', onDragStart);
+                el.addEventListener('touchstart', onDragStart, {passive: false});
+                
+                gameContainer.appendChild(el);
+            });
+
+            // Iniciar Narrativa
+            showDialog();
         }
-      }
-    }
-    if(goal.type === "manyToOne"){ // varios -> a
-      if((goal.bs.includes(a.id) && b.id===goal.a) || (goal.bs.includes(b.id) && a.id===goal.a)){
-        const giver = goal.bs.includes(a.id)? a.id : b.id;
-        const arr = state.made[goal.id] || [];
-        if(!arr.find(([x,y])=> x===giver)){
-          arr.push([giver, goal.a]); state.made[goal.id]=arr;
-          if(arr.length===goal.bs.length) goal.done = true;
-          return {ok:true, goal};
+
+        function showDialog() {
+            const level = LEVELS[currentLevelIdx];
+            
+            // Si acabamos los diálogos, empieza el juego
+            if (dialogueStep >= level.narrative.length) {
+                dialogBox.style.display = 'none';
+                isGameplayActive = true;
+                showTutorialHand(); // Mostrar ayuda visual si es necesario
+                return;
+            }
+
+            dialogBox.style.display = 'flex';
+            const text = level.narrative[dialogueStep];
+            dialogText.textContent = text;
+            speak(text);
+
+            dialogBtn.onclick = () => {
+                dialogueStep++;
+                showDialog();
+            };
         }
-      }
-    }
-  }
-  return {ok:false};
-}
 
-/*********************** DIBUJO Y ANIMACIONES ************************/
-function drawConnection(a, b, icon){
-  const g = GALAXIES[current];
-  const ax=a.x, ay=a.y, bx=b.x, by=b.y;
-  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  const id = `p${Math.random().toString(36).slice(2)}`;
-  const mx = (ax+bx)/2 + (Math.random()*60-30);
-  const my = (ay+by)/2 + (Math.random()*60-30);
-  const d = `M ${ax} ${ay} Q ${mx} ${my} ${bx} ${by}`;
-  path.setAttribute("d", d);
-  path.setAttribute("fill", "none");
-  path.setAttribute("stroke", "#7fe9ff");
-  path.setAttribute("stroke-width", "3");
-  path.setAttribute("stroke-linecap", "round");
-  path.setAttribute("opacity", ".85");
-  path.setAttribute("id", id);
-  linesSvg.appendChild(path);
+        function speak(text) {
+            if (synth.speaking) synth.cancel();
+            const utter = new SpeechSynthesisUtterance(text);
+            if (voice) utter.voice = voice;
+            utter.rate = 0.9; // Un poco más lento para niños
+            utter.pitch = 1.2; // Voz más amigable
+            
+            robot.classList.add('talking');
+            utter.onend = () => robot.classList.remove('talking');
+            
+            synth.speak(utter);
+        }
 
-  // Animar icono viajando
-  const mover = document.createElementNS("http://www.w3.org/2000/svg", "text");
-  mover.textContent = icon;
-  mover.setAttribute("font-size", "22");
-  const animate = document.createElementNS("http://www.w3.org/2000/svg", "animateMotion");
-  animate.setAttribute("dur", "1.6s");
-  animate.setAttribute("repeatCount", "1");
-  animate.setAttribute("fill", "freeze");
-  const mpath = document.createElementNS("http://www.w3.org/2000/svg", "mpath");
-  mpath.setAttributeNS("http://www.w3.org/1999/xlink","xlink:href", `#${id}`);
-  animate.appendChild(mpath); mover.appendChild(animate); linesSvg.appendChild(mover);
-}
+        function showTutorialHand() {
+            // Solo mostrar mano en el nivel 1 o si el usuario no hace nada en 5 segundos
+            if (currentLevelIdx === 0) {
+                const p1 = document.querySelector('.planet'); // Primer planeta
+                const p2 = document.querySelectorAll('.planet')[1]; // Segundo
+                
+                if(!p1 || !p2) return;
 
-function bumpHappiness(id){
-  const n = state.nodes.find(x=> x.id===id);
-  n.happy = Math.min(1, (n.happy||0)+0.5);
-  const meter = document.querySelector(`.planeta[data-id="${id}"] .meter i`);
-  if(meter){ meter.style.width = (n.happy*100)+"%"; }
-}
+                const r1 = p1.getBoundingClientRect();
+                const r2 = p2.getBoundingClientRect();
 
-function announceSuccess(goal){
-  AudioKit.chordSuccess();
-  switch(goal.id){
-    case "videollamada":
-      Narrator.speak("¡Conexión exitosa! ¡Has hecho feliz a alguien! Familia: ¡La red acorta la distancia, y nos une en la misma estancia!");
-      break;
-    case "gamers":
-      Narrator.speak("¡Conexión exitosa! ¡Has hecho feliz a alguien! Jugadores: ¡Con un simple clic, la diversión hace un tic!");
-      break;
-    default:
-      Narrator.speak("¡Conexión exitosa! ¡Has hecho feliz a alguien!");
-  }
-}
+                ghostHand.style.display = 'block';
+                ghostHand.style.left = (r1.left + r1.width/2 - 40) + 'px';
+                ghostHand.style.top = (r1.top + r1.height/2 - 40) + 'px';
+                
+                // Calcular distancia para la animación CSS
+                const tx = (r2.left - r1.left) + 'px';
+                const ty = (r2.top - r1.top) + 'px';
+                
+                ghostHand.style.setProperty('--tx', tx);
+                ghostHand.style.setProperty('--ty', ty);
+                ghostHand.style.animation = 'hand-drag 2s infinite';
+            }
+        }
 
-function maybeCompleteGoal(goal){
-  if(goal.done){
-    completedConnections++;
-    updateProgress();
-    // Animación especial según meta
-    if(goal.id === "videollamada") specialAnim("✉️");
-    if(goal.id === "gamers") specialAnim("🎮");
-    if(goal.id === "clase") specialAnim("💡");
-    if(goal.id === "fiesta") specialAnim("🎉");
+        // --- LÓGICA DEL JUEGO (DRAW TO CONNECT) ---
 
-    // Guardar en álbum
-    saveMoment(goal);
+        function onDragStart(e) {
+            if (!isGameplayActive) return;
+            e.preventDefault();
+            
+            // Ocultar tutorial si el niño toca
+            ghostHand.style.display = 'none';
 
-    // ¿Victoria global?
-    if(completedConnections>=totalConnections){
-      setTimeout(()=> victory(), 700);
-    }
-  }
-}
+            const target = e.currentTarget;
+            playTone(400, 'sine'); // Sonido pop
+            target.classList.add('pop');
+            setTimeout(() => target.classList.remove('pop'), 200);
 
-function updateProgress(){
-  const pct = (completedConnections/Math.max(1,totalConnections))*100;
-  progressBar.style.width = pct+"%";
-  progressText.textContent = `${completedConnections}/${totalConnections}`;
-}
+            startPlanet = target.id;
+            const center = getCenter(target);
 
-function specialAnim(icon){
-  // Pequeño destello en el centro del mapa
-  AudioKit.sparkle();
-  const span = document.createElement("div");
-  span.textContent = icon;
-  span.style.position = "absolute";
-  span.style.left = "50%"; span.style.top = "50%"; span.style.transform = "translate(-50%,-50%) scale(0.5)";
-  span.style.fontSize = "56px"; span.style.filter = "drop-shadow(0 8px 16px rgba(0,0,0,.6))";
-  mapa.appendChild(span);
-  setTimeout(()=> span.style.transition = "transform .6s ease, opacity .6s ease", 0);
-  setTimeout(()=>{ span.style.transform = "translate(-50%,-50%) scale(1.4)"; }, 0);
-  setTimeout(()=>{ span.style.opacity = "0"; }, 530);
-  setTimeout(()=> span.remove(), 1200);
-}
+            // Crear línea
+            activeLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            activeLine.setAttribute("x1", center.x);
+            activeLine.setAttribute("y1", center.y);
+            activeLine.setAttribute("x2", center.x);
+            activeLine.setAttribute("y2", center.y);
+            activeLine.classList.add("connection-line", "temp-line");
+            svgLayer.appendChild(activeLine);
 
-/*********************** FINAL / VICTORIA ************************/
-function victory(){
-  showScene("final");
-  // Render de red final (zoom out simulado)
-  const div = $("#finalNet");
-  div.innerHTML = "";
-  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.setAttribute("viewBox", linesSvg.getAttribute("viewBox"));
-  svg.style.width = "100%"; svg.style.height = "100%";
-  div.appendChild(svg);
-  // Copiar paths existentes
-  svg.innerHTML = linesSvg.innerHTML;
-  // Brillo
-  svg.querySelectorAll("path").forEach(p=>{
-    p.setAttribute("stroke", "#b0fffb");
-    p.setAttribute("stroke-width", "3");
-  });
-  Narrator.speak("Victoria. La red completa brilla uniendo corazones en toda la galaxia.");
-}
+            document.addEventListener('mousemove', onDragMove);
+            document.addEventListener('touchmove', onDragMove, {passive: false});
+            document.addEventListener('mouseup', onDragEnd);
+            document.addEventListener('touchend', onDragEnd);
+        }
 
-/*********************** HINTS ************************/
-function resetHintTimer(){
-  clearTimeout(hintTimer);
-  hintTimer = setTimeout(()=>{
-    // Buscar primera meta no completa y sugerir
-    const g = state.goals.find(x=> !x.done);
-    if(!g) return;
-    let ids = [];
-    if(g.type==="oneToOne") ids=[g.a, g.b];
-    if(g.type==="oneToMany") ids=[g.a, ...g.bs];
-    if(g.type==="manyToOne") ids=[...g.bs, g.a];
-    ids.forEach(id=>{
-      const el = document.querySelector(`.planeta[data-id="${id}"]`);
-      el && el.classList.add("hint");
-      setTimeout(()=> el && el.classList.remove("hint"), 1200);
-    });
-    Narrator.speak("Pista de la Guía de la Galaxia: mira los planetas resaltados. ¿Quién puede ayudar a quién?");
-  }, 9000);
-}
+        function onDragMove(e) {
+            if (!activeLine) return;
+            e.preventDefault(); // Prevenir scroll
 
-/*********************** ÁLBUM ************************/
-function saveMoment(goal){
-  const gname = GALAXIES[current].name;
-  const stamp = {g:gname, id:goal.id, t:Date.now()};
-  album.push(stamp);
-  localStorage.setItem("album_conectado", JSON.stringify(album));
-}
-function showAlbum(){
-  const items = JSON.parse(localStorage.getItem("album_conectado")||"[]");
-  const pretty = items.map(x=> `${new Date(x.t).toLocaleString()} — ${x.g} — ${x.id}`).join("\n");
-  alert(items.length? `📸 Álbum de Momentos Conectados:\n\n${pretty}` : "Aún no hay momentos guardados. ¡Conecta para coleccionar!");
-}
+            const pt = getCoords(e);
+            activeLine.setAttribute("x2", pt.x);
+            activeLine.setAttribute("y2", pt.y);
+        }
 
-/*********************** DEMO INTRO (animación) ************************/
-(function demoAnim(){
-  const svg = $("#demoSvg");
-  const lines = svg.querySelector("#demoLines");
-  const flow = svg.querySelectorAll("#demoFlow text");
-  let i=0;
-  setInterval(()=>{
-    // Dibuja una línea aleatoria entre puntos
-    const pts = [
-      [100,70],[250,120],[420,80],[160,280],[520,260]
-    ];
-    const a = pts[(i)%pts.length];
-    const b = pts[(i+2)%pts.length];
-    const p = document.createElementNS("http://www.w3.org/2000/svg", "line");
-    p.setAttribute("x1", a[0]); p.setAttribute("y1", a[1]); p.setAttribute("x2", b[0]); p.setAttribute("y2", b[1]);
-    p.setAttribute("stroke", "#7fe9ff"); p.setAttribute("stroke-width", "3"); p.setAttribute("opacity", ".65");
-    p.setAttribute("filter", "url(#glow)");
-    lines.appendChild(p);
-    const t = flow[i%flow.length];
-    t.setAttribute("x", a[0]); t.setAttribute("y", a[1]);
-    t.animate([{transform:"translate(0,0)"},{transform:`translate(${b[0]-a[0]}px, ${b[1]-a[1]}px)`}], {duration:1700, fill:"forwards"});
-    i++;
-    if(i>9){ lines.innerHTML=""; i=0; }
-  }, 900);
-})();
+        function onDragEnd(e) {
+            document.removeEventListener('mousemove', onDragMove);
+            document.removeEventListener('touchmove', onDragMove);
+            document.removeEventListener('mouseup', onDragEnd);
+            document.removeEventListener('touchend', onDragEnd);
 
-// Narración inicial automática breve
-setTimeout(()=> Narrator.speak("Observatorio listo. Pulsa Comenzar Misión para ir al mapa estelar."), 800);
-</script>
+            if (!activeLine) return;
+
+            // Detectar si soltó sobre un planeta
+            const pt = getCoords(e, true); // true = raw client coords for elementFromPoint
+            const elBelow = document.elementFromPoint(pt.cx, pt.cy);
+            const planetBelow = elBelow ? elBelow.closest('.planet') : null;
+
+            let success = false;
+
+            if (planetBelow && planetBelow.id !== startPlanet) {
+                // Validar conexión
+                const pair = [startPlanet, planetBelow.id].sort().join('-');
+                const levelData = LEVELS[currentLevelIdx];
+                const isValid = levelData.connections.some(c => [...c].sort().join('-') === pair);
+                const isDone = completedPairs.includes(pair);
+
+                if (isValid && !isDone) {
+                    success = true;
+                    // Fijar línea
+                    const c1 = getCenter(document.getElementById(startPlanet));
+                    const c2 = getCenter(planetBelow);
+                    
+                    activeLine.setAttribute("x2", c2.x);
+                    activeLine.setAttribute("y2", c2.y);
+                    activeLine.classList.remove("temp-line");
+                    
+                    completedPairs.push(pair);
+                    
+                    // Efectos de victoria
+                    spawnParticles(c2.x, c2.y);
+                    planetBelow.classList.add('pop');
+                    playSuccessTune();
+                    
+                    checkWin();
+                }
+            }
+
+            if (!success) {
+                activeLine.remove();
+                playTone(150, 'sawtooth', 0.1); // Sonido error suave
+            }
+            
+            activeLine = null;
+            startPlanet = null;
+        }
+
+        // --- UTILIDADES ---
+        function getCoords(e, raw=false) {
+            let cx, cy;
+            if (e.changedTouches) {
+                cx = e.changedTouches[0].clientX;
+                cy = e.changedTouches[0].clientY;
+            } else {
+                cx = e.clientX;
+                cy = e.clientY;
+            }
+            if (raw) return {cx, cy};
+            
+            const rect = gameContainer.getBoundingClientRect();
+            return { x: cx - rect.left, y: cy - rect.top };
+        }
+
+        function getCenter(el) {
+            const r = el.getBoundingClientRect();
+            const cr = gameContainer.getBoundingClientRect();
+            return {
+                x: r.left + r.width/2 - cr.left,
+                y: r.top + r.height/2 - cr.top
+            };
+        }
+
+        function checkWin() {
+            const level = LEVELS[currentLevelIdx];
+            if (completedPairs.length === level.connections.length) {
+                isGameplayActive = false;
+                fireConfetti();
+                playWinMusic();
+                
+                setTimeout(() => {
+                    // Mostrar diálogo de victoria y botón para siguiente nivel
+                    dialogText.textContent = "¡Yupi! ¡Conectados! 🌟";
+                    dialogBtn.innerHTML = "Siguiente ▶️";
+                    dialogBtn.onclick = () => loadLevel(currentLevelIdx + 1);
+                    dialogBox.style.display = 'flex';
+                    speak("¡Yupi! ¡Lo lograste!");
+                }, 1000);
+            }
+        }
+
+        function congratulateFinish() {
+            dialogText.textContent = "¡ERES UN MAESTRO DE LA RED! 🏆";
+            dialogBtn.innerHTML = "Jugar otra vez 🔄";
+            dialogBtn.onclick = () => location.reload();
+            dialogBox.style.display = 'flex';
+            speak("¡Felicidades! Eres un maestro de Internet. Gracias por jugar.");
+            fireConfetti();
+            setInterval(fireConfetti, 2000);
+        }
+
+        // --- EFECTOS VISUALES (JUICE) ---
+        function spawnParticles(x, y) {
+            const colors = ['#00f3ff', '#ff00cc', '#fff01f'];
+            for(let i=0; i<10; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                p.style.left = x + 'px';
+                p.style.top = y + 'px';
+                p.style.width = (Math.random()*10 + 5) + 'px';
+                p.style.height = p.style.width;
+                p.style.background = colors[Math.floor(Math.random()*colors.length)];
+                
+                // Animación JS simple
+                const angle = Math.random() * Math.PI * 2;
+                const velocity = Math.random() * 100 + 50;
+                const tx = Math.cos(angle) * velocity;
+                const ty = Math.sin(angle) * velocity;
+                
+                p.animate([
+                    { transform: 'translate(0,0) scale(1)', opacity: 1 },
+                    { transform: `translate(${tx}px, ${ty}px) scale(0)`, opacity: 0 }
+                ], { duration: 800, easing: 'ease-out' });
+                
+                document.getElementById('particles-layer').appendChild(p);
+                setTimeout(() => p.remove(), 800);
+            }
+        }
+
+        // --- AUDIO PROCEDURAL (WEB AUDIO API) ---
+        let audioCtx;
+        function initAudioContext() {
+            if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        function playTone(freq, type, duration=0.1) {
+            if(!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        function playSuccessTune() {
+            if(!audioCtx) return;
+            const now = audioCtx.currentTime;
+            [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => { // C Major Arpeggio
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.value = f;
+                gain.gain.setValueAtTime(0.05, now + i*0.1);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + i*0.1 + 0.3);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now + i*0.1);
+                osc.stop(now + i*0.1 + 0.3);
+            });
+        }
+        
+        function playWinMusic() {
+            // Melodía simple de victoria
+            if(!audioCtx) return;
+            const now = audioCtx.currentTime;
+            const notes = [523.25, 659.25, 783.99, 1046.50, 783.99, 1046.50]; 
+            notes.forEach((f, i) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'square';
+                osc.frequency.value = f;
+                gain.gain.setValueAtTime(0.05, now + i*0.2);
+                gain.gain.linearRampToValueAtTime(0, now + i*0.2 + 0.15);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now + i*0.2);
+                osc.stop(now + i*0.2 + 0.2);
+            });
+        }
+
+        // --- CONFETI SIMPLE ---
+        function fireConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            const pieces = [];
+            for(let i=0; i<100; i++) {
+                pieces.push({
+                    x: canvas.width/2,
+                    y: canvas.height/2,
+                    vx: (Math.random()-0.5)*20,
+                    vy: (Math.random()-0.5)*20 - 10,
+                    color: `hsl(${Math.random()*360}, 100%, 50%)`,
+                    size: Math.random()*10 + 5
+                });
+            }
+            
+            function update() {
+                ctx.clearRect(0,0, canvas.width, canvas.height);
+                let alive = false;
+                pieces.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += 0.5; // Gravedad
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(p.x, p.y, p.size, p.size);
+                    if(p.y < canvas.height) alive = true;
+                });
+                if(alive) requestAnimationFrame(update);
+                else ctx.clearRect(0,0, canvas.width, canvas.height);
+            }
+            update();
+        }
+
+        // Redimensionar SVG al cambiar ventana
+        window.addEventListener('resize', () => {
+            document.getElementById('connections-layer').setAttribute('viewBox', `0 0 ${window.innerWidth} ${window.innerHeight}`);
+        });
+
+    </script>
 </body>
 </html>
