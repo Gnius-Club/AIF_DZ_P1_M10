@@ -3,730 +3,412 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Red Mágica - Kids Edition</title>
+    <title>La Red de los Corazones Conectados</title>
     <style>
-        /* --- ESTÉTICA DIVERTIDA Y ESPACIAL --- */
         :root {
-            --bg-deep: #1a0b2e;
+            --bg-deep: #0b0e2e;
             --neon-blue: #00f3ff;
             --neon-pink: #ff00cc;
             --neon-green: #39ff14;
             --neon-yellow: #fff01f;
-            --overlay-bg: rgba(0, 0, 0, 0.85);
+            --overlay-bg: rgba(11, 14, 46, 0.98);
         }
 
-        body {
-            margin: 0;
-            overflow: hidden;
-            background-color: var(--bg-deep);
-            /* Estrellas animadas en CSS */
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; background-color: var(--bg-deep);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            touch-action: none; user-select: none;
+        }
+
+        #stars-container {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-image: 
-                radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 4px),
-                radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 2px);
-            background-size: 550px 550px, 350px 350px;
-            font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif; /* Fuente amigable */
-            touch-action: none;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
+                radial-gradient(2px 2px at 20px 30px, #eee, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 100px 150px, #fff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 200px 300px, #ddd, rgba(0,0,0,0));
+            background-size: 300px 300px; z-index: 0;
         }
-
-        /* Animación de fondo */
-        @keyframes spaceMove {
-            from { background-position: 0 0, 0 0; }
-            to { background-position: -50px -50px, -30px -30px; }
-        }
-        body { animation: spaceMove 20s linear infinite; }
 
         /* --- CAPAS --- */
-        #game-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
-        #particles-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
-        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+        #game-stage { position: relative; width: 100%; height: 100%; z-index: 1; }
+        #svg-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
+        #planets-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 3; }
 
-        /* --- ELEMENTOS DE JUEGO --- */
-        svg { width: 100%; height: 100%; }
-        
-        .connection-line {
-            stroke: var(--neon-yellow);
-            stroke-width: 12; /* Más grueso para niños */
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            filter: drop-shadow(0 0 8px var(--neon-yellow));
-            transition: stroke 0.3s;
-        }
-        
-        .temp-line {
-            stroke: var(--neon-blue);
-            stroke-dasharray: 20, 10;
-            opacity: 0.7;
-            animation: dash 1s linear infinite;
-        }
-
-        @keyframes dash { to { stroke-dashoffset: -30; } }
-
-        .planet {
-            position: absolute;
-            width: 90px; /* Más grandes */
-            height: 90px;
-            border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, #fff, #5e72eb);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 50px;
-            box-shadow: 0 0 20px rgba(94, 114, 235, 0.6), inset -5px -5px 10px rgba(0,0,0,0.3);
-            transform: translate(-50%, -50%);
-            cursor: pointer;
-            z-index: 5;
-            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            border: 4px solid white;
-        }
-
-        .planet:active { transform: translate(-50%, -50%) scale(0.9); }
-        .planet.pop { animation: pop 0.4s ease; }
-        
-        @keyframes pop {
-            0% { transform: translate(-50%, -50%) scale(1); }
-            50% { transform: translate(-50%, -50%) scale(1.3); }
-            100% { transform: translate(-50%, -50%) scale(1); }
-        }
-
-        /* Burbuja de pensamiento (ICONOS en vez de texto) */
-        .thought-bubble {
-            position: absolute;
-            top: -70px;
-            background: white;
-            border-radius: 20px;
-            padding: 5px 15px;
-            font-size: 30px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            animation: float 3s ease-in-out infinite;
-            border: 3px solid var(--neon-pink);
+        /* --- CONTROLES SUPERIORES --- */
+        #top-controls {
+            position: absolute; top: 15px; right: 15px; left: 15px;
+            display: flex; justify-content: space-between; z-index: 1000;
             pointer-events: none;
         }
-        .thought-bubble::after {
-            content: '';
-            position: absolute;
-            bottom: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            border-width: 10px 10px 0;
-            border-style: solid;
-            border-color: var(--neon-pink) transparent transparent transparent;
+        .ctrl-btn { pointer-events: auto; }
+
+        .icon-btn {
+            background: rgba(0, 243, 255, 0.2); border: 2px solid var(--neon-blue);
+            color: white; width: 45px; height: 45px; border-radius: 50%;
+            cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center;
         }
 
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .text-btn-small {
+            background: rgba(255, 0, 204, 0.2); border: 2px solid var(--neon-pink);
+            color: white; padding: 5px 15px; border-radius: 20px;
+            cursor: pointer; font-weight: bold; font-size: 0.8rem;
+        }
 
-        /* --- PERSONAJE ROBOT TUTORIAL --- */
-        #robot-guide {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            width: 120px;
-            height: 120px;
-            background: radial-gradient(circle, #ddd, #999);
-            border-radius: 50%;
-            border: 5px solid var(--neon-blue);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 70px;
-            z-index: 100;
-            box-shadow: 0 0 20px var(--neon-blue);
-            pointer-events: auto;
+        /* --- PLANETAS (Ubicados en zona segura) --- */
+        .planet {
+            position: absolute; width: 85px; height: 85px; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 40px; cursor: pointer; z-index: 10;
+            border: 3px solid rgba(255,255,255,0.9);
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
+            transform: translate(-50%, -50%);
             transition: transform 0.2s;
         }
-        #robot-guide.talking { animation: talk 0.2s infinite alternate; }
-        @keyframes talk { from { transform: scale(1); } to { transform: scale(1.05); } }
+        .planet:active { transform: translate(-50%, -50%) scale(1.1); }
 
-        /* --- UI OVERLAY & DIALOGOS --- */
-        #dialog-box {
-            position: absolute;
-            bottom: 30px;
-            left: 160px; /* Al lado del robot */
-            right: 20px;
-            background: white;
-            border-radius: 30px;
-            padding: 20px;
-            border: 5px solid var(--neon-blue);
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            pointer-events: auto;
-            max-width: 600px;
+        .thought-bubble {
+            position: absolute; bottom: 105%; background: white;
+            border-radius: 12px; padding: 4px; min-width: 35px;
+            text-align: center; border: 2px solid var(--neon-blue);
+            font-size: 20px; animation: float 3s ease-in-out infinite;
         }
 
-        #dialog-text {
-            font-size: 1.5rem;
-            color: #333;
-            margin: 0 0 15px 0;
-            font-weight: bold;
+        /* --- INTERFAZ DE DIÁLOGO (No bloqueante) --- */
+        #ui-overlay {
+            position: absolute; bottom: 15px; left: 0; width: 100%;
+            display: flex; justify-content: center; align-items: flex-end;
+            gap: 15px; z-index: 100; pointer-events: none; /* Importante para no tapar clics */
         }
 
-        /* Botón Siguiente (Flecha gigante) */
-        .big-btn {
-            background: var(--neon-green);
-            border: none;
-            padding: 10px 40px;
-            border-radius: 50px;
-            font-size: 2rem;
-            color: #000;
-            cursor: pointer;
-            box-shadow: 0 5px 0 #2db30e;
-            transition: transform 0.1s;
-            align-self: flex-end;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .big-btn:active { transform: translateY(5px); box-shadow: none; }
-        .big-btn span { font-size: 1.2rem; font-weight: bold; }
-
-        /* MANO FANTASMA TUTORIAL */
-        #ghost-hand {
-            position: absolute;
-            font-size: 80px;
-            pointer-events: none;
-            z-index: 50;
-            display: none;
-            filter: drop-shadow(0 0 10px white);
+        #robot-guide {
+            width: 90px; height: 90px; background: #eee;
+            border-radius: 25%; border: 4px solid var(--neon-blue);
+            display: flex; justify-content: center; align-items: center;
+            font-size: 45px; box-shadow: 0 0 15px var(--neon-blue);
+            flex-shrink: 0; pointer-events: auto;
         }
 
-        @keyframes hand-drag {
-            0% { transform: translate(0, 0) scale(1); }
-            20% { transform: translate(0, 0) scale(0.9); } /* Press */
-            80% { transform: translate(var(--tx), var(--ty)) scale(0.9); } /* Drag */
-            100% { transform: translate(var(--tx), var(--ty)) scale(1); opacity: 0; } /* Release */
+        .dialog-box {
+            background: white; border-radius: 15px; padding: 15px;
+            border: 4px solid var(--neon-blue); width: 65%; max-width: 500px;
+            pointer-events: auto; box-shadow: 0 5px 20px rgba(0,0,0,0.5);
         }
 
-        /* PARTÍCULAS */
-        .particle {
-            position: absolute;
-            border-radius: 50%;
-            pointer-events: none;
-            animation: fadeOut 1s forwards;
+        .btn-next {
+            background: var(--neon-green); border: none; padding: 10px 20px;
+            border-radius: 8px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 0 #2a8f0e; font-size: 0.9rem;
         }
-        @keyframes fadeOut { to { opacity: 0; transform: scale(0); } }
 
-        /* PANTALLA INICIO */
-        #start-screen {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
-            z-index: 200;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: white;
+        /* --- MODALES --- */
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--overlay-bg); z-index: 2000;
+            display: flex; flex-direction: column; justify-content: center;
+            align-items: center; color: white; text-align: center; padding: 20px;
         }
-        #start-screen h1 { font-size: 3rem; color: var(--neon-yellow); text-shadow: 0 0 10px red; text-align: center; }
+
+        .title-card { font-size: 2.5rem; color: var(--neon-yellow); margin-bottom: 20px; text-shadow: 0 0 10px rgba(255,255,0,0.5); }
+        
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+        .talking { animation: shake 0.3s infinite; }
+        @keyframes shake { 0% { transform: rotate(-2deg); } 100% { transform: rotate(2deg); } }
+
+        .connection-line {
+            stroke: var(--neon-yellow); stroke-width: 8; stroke-linecap: round;
+            filter: drop-shadow(0 0 5px var(--neon-yellow));
+        }
+        .hidden { display: none !important; }
 
     </style>
 </head>
 <body>
 
-    <!-- Pantalla de Inicio (Necesaria para habilitar audio y voz) -->
-    <div id="start-screen">
-        <h1>🌌 Red Mágica 🌌</h1>
-        <p style="font-size: 1.5rem;">¡Conecta los corazones!</p>
-        <button class="big-btn" onclick="startGame()">
-            <span>JUGAR</span> ▶️
-        </button>
+    <div id="stars-container"></div>
+
+    <div id="top-controls" class="hidden">
+        <button id="voice-toggle" class="icon-btn ctrl-btn" onclick="toggleVoice()">🔊</button>
+        <button id="skip-intro" class="text-btn-small ctrl-btn" onclick="skipIntro()">SALTAR INTRO ⏭️</button>
     </div>
 
-    <div id="game-container">
-        <svg id="connections-layer"></svg>
-        <!-- Planetas inyectados por JS -->
+    <div id="start-screen" class="modal">
+        <div class="title-card">LA RED DE LOS<br>CORAZONES CONECTADOS</div>
+        <p style="font-size: 1.1rem; max-width: 400px; line-height: 1.5;">Aprende a usar el poder de Internet para unir a las personas.</p>
+        <button class="btn-next" style="font-size: 1.3rem; margin-top:20px;" onclick="initGame()">¡COMENZAR! 🚀</button>
     </div>
 
-    <!-- Capa de efectos -->
-    <div id="particles-layer"></div>
+    <div id="game-stage">
+        <svg id="svg-canvas"></svg>
+        <div id="planets-container"></div>
+    </div>
 
-    <!-- UI -->
-    <div id="ui-layer">
-        <!-- Robot Guía -->
+    <div id="ui-overlay" class="hidden">
         <div id="robot-guide">🤖</div>
-        
-        <!-- Caja de Diálogo -->
-        <div id="dialog-box" style="display: none;">
-            <p id="dialog-text">...</p>
-            <button id="dialog-btn" class="big-btn">▶️</button>
+        <div class="dialog-box">
+            <div id="dialog-content" style="font-size: 1rem; font-weight: bold; color: #333; margin-bottom: 10px;">...</div>
+            <button id="next-btn" class="btn-next" style="float:right;">Siguiente ▶️</button>
         </div>
-
-        <!-- Mano Tutorial -->
-        <div id="ghost-hand">👆</div>
     </div>
 
-    <canvas id="confetti-canvas" style="position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:999;"></canvas>
+    <div id="victory-screen" class="modal hidden">
+        <div style="font-size: 4rem;">⭐</div>
+        <div class="title-card">¡FANTÁSTICO!</div>
+        <p id="victory-text" style="font-size: 1.2rem; max-width: 500px; margin-bottom: 30px;"></p>
+        <button class="btn-next" style="font-size: 1.3rem; background: var(--neon-blue); box-shadow: 0 4px 0 #008eb3;" onclick="resetGame()">JUGAR DE NUEVO 🔄</button>
+    </div>
 
     <script>
-        // --- DATOS DEL JUEGO (Simplificados para niños) ---
-        const LEVELS = [
-            {
-                id: 1,
-                narrative: [
-                    "¡Hola! Soy Robo. 🤖",
-                    "La niña extraña a su abuela. 😢",
-                    "¡Ayuda a conectarlas! ⚡"
-                ],
-                hint: "Arrastra de la niña a la abuela",
-                planets: [
-                    { id: 'girl', emoji: '👧', want: '👵', x: 20, y: 50 },
-                    { id: 'grandma', emoji: '👵', want: '👧', x: 80, y: 50 }
-                ],
-                connections: [['girl', 'grandma']]
-            },
-            {
-                id: 2,
-                narrative: [
-                    "¡Bien hecho! 🎉",
-                    "Mira, un coche de carreras. 🏎️",
-                    "¡Quiere jugar con el niño gamer! 🎮"
-                ],
-                hint: "Conecta los juguetes",
-                planets: [
-                    { id: 'gamer', emoji: '🎮', want: '🏎️', x: 30, y: 30 },
-                    { id: 'car', emoji: '🏎️', want: '🎮', x: 70, y: 70 }
-                ],
-                connections: [['gamer', 'car']]
-            },
-            {
-                id: 3,
-                narrative: [
-                    "¡Eres genial! 🌟",
-                    "El Profe quiere enseñar Dinosaurios. 🦖",
-                    "¡Conecta a TODOS los niños con el Profe!"
-                ],
-                hint: "Une al profe con los 3 niños",
-                planets: [
-                    { id: 'teach', emoji: '👨‍🏫', want: '🎓', x: 50, y: 20 },
-                    { id: 'k1', emoji: '👦', want: '🦖', x: 20, y: 80 },
-                    { id: 'k2', emoji: '👧', want: '🦖', x: 50, y: 80 },
-                    { id: 'k3', emoji: '🧑', want: '🦖', x: 80, y: 80 }
-                ],
-                connections: [['teach', 'k1'], ['teach', 'k2'], ['teach', 'k3']]
-            },
-            {
-                id: 4,
-                narrative: [
-                    "¡Última misión! 🚀",
-                    "Es el cumple del León. 🦁",
-                    "¡Lleva la fiesta al León!"
-                ],
-                hint: "Música y pastel para el león",
-                planets: [
-                    { id: 'lion', emoji: '🦁', want: '❤️', x: 50, y: 50 },
-                    { id: 'music', emoji: '🎸', want: '🦁', x: 15, y: 20 },
-                    { id: 'cake', emoji: '🎂', want: '🦁', x: 85, y: 20 },
-                    { id: 'balloons', emoji: '🎈', want: '🦁', x: 50, y: 85 }
-                ],
-                connections: [['music', 'lion'], ['cake', 'lion'], ['balloons', 'lion']]
-            }
-        ];
+        // COORDENADAS RE-CALIBRADAS PARA EVITAR ÁREA DE UI (y: 15% - 65%)
+        const GAME_DATA = {
+            intro: [
+                { text: "¡Hola! Soy Robo. ¿Ves estos planetas? Sus habitantes están separados por el espacio." },
+                { text: "Internet es una RED que nos une a todos, sin importar lo lejos que estemos." },
+                { text: "Al conectarnos, podemos compartir mensajes, juegos y muchas ideas geniales." },
+                { text: "¡Ayúdame a tejer los hilos mágicos de Internet!" }
+            ],
+            levels: [
+                {
+                    narrative: ["Anita extraña a su abuela. 👵", "¡Trazamos un hilo de luz entre ellas!"],
+                    phrase: "¡La red acorta la distancia, y nos une en la misma estancia!",
+                    planets: [
+                        { id: 'anita', emoji: '👧', target: 'abuela', x: 25, y: 40, color: '#ff9a9e' },
+                        { id: 'abuela', emoji: '👵', target: 'anita', x: 75, y: 40, color: '#fad0c4' }
+                    ],
+                    required: 1
+                },
+                {
+                    narrative: ["Paco y Lola quieren jugar carreras. 🏎️", "¡Conéctalos para que empiece la diversión!"],
+                    phrase: "¡Con un simple clic, la diversión hace un tic!",
+                    planets: [
+                        { id: 'paco', emoji: '🏎️', target: 'lola', x: 25, y: 25, color: '#a1c4fd' },
+                        { id: 'lola', emoji: '🎮', target: 'paco', x: 75, y: 55, color: '#c2e9fb' }
+                    ],
+                    required: 1
+                },
+                {
+                    narrative: ["¡Clase de Dinosaurios! 🦖", "Une a todos los niños con el Profesor."],
+                    phrase: "¡Compartir una idea, hace que el mundo sea una gran aldea!",
+                    planets: [
+                        { id: 'profe', emoji: '👨‍🏫', isHub: true, x: 50, y: 20, color: '#84fab0' },
+                        { id: 'n1', emoji: '👦', target: 'profe', x: 20, y: 55, color: '#fff' },
+                        { id: 'n2', emoji: '👧', target: 'profe', x: 50, y: 60, color: '#fff' },
+                        { id: 'n3', emoji: '👶', target: 'profe', x: 80, y: 55, color: '#fff' }
+                    ],
+                    required: 3
+                },
+                {
+                    narrative: ["¡Fiesta de Leo! 🦁", "Lleva la música, el pastel y los globos hacia él."],
+                    phrase: "¡Internet es comunidad, donde florece la verdadera amistad!",
+                    planets: [
+                        { id: 'leo', emoji: '🦁', isHub: true, x: 50, y: 45, color: '#fccb90' },
+                        { id: 'm1', emoji: '🎸', target: 'leo', x: 20, y: 20, color: '#fff' },
+                        { id: 'm2', emoji: '🎂', target: 'leo', x: 80, y: 20, color: '#fff' },
+                        { id: 'm3', emoji: '🎈', target: 'leo', x: 50, y: 70, color: '#fff' }
+                    ],
+                    required: 3
+                }
+            ]
+        };
 
-        // --- ESTADO GLOBAL ---
         let currentLevelIdx = 0;
-        let dialogueStep = 0;
-        let isGameplayActive = false;
-        let activeLine = null;
-        let startPlanet = null;
-        let completedPairs = [];
-        let synth = window.speechSynthesis;
-        let voice = null;
+        let dialogueIdx = 0;
+        let isVoiceEnabled = true;
+        let activeConnections = 0;
+        let isDrawing = false;
+        let startPlanetEl = null;
+        let tempLine = null;
+        const synth = window.speechSynthesis;
 
-        // Elementos DOM
-        const gameContainer = document.getElementById('game-container');
-        const svgLayer = document.getElementById('connections-layer');
-        const dialogBox = document.getElementById('dialog-box');
-        const dialogText = document.getElementById('dialog-text');
-        const dialogBtn = document.getElementById('dialog-btn');
-        const robot = document.getElementById('robot-guide');
-        const ghostHand = document.getElementById('ghost-hand');
-
-        // --- INICIO ---
-        function startGame() {
-            document.getElementById('start-screen').style.display = 'none';
-            // Intentar obtener voz en español
-            let voices = synth.getVoices();
-            voice = voices.find(v => v.lang.startsWith('es')) || voices[0];
-            
-            initAudioContext(); // Habilitar audio Web Audio API
-            loadLevel(0);
+        function initGame() {
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('ui-overlay').classList.remove('hidden');
+            document.getElementById('top-controls').classList.remove('hidden');
+            runIntro();
         }
 
-        // --- SISTEMA DE NIVELES Y DIÁLOGO ---
-        function loadLevel(idx) {
-            currentLevelIdx = idx;
-            dialogueStep = 0;
-            completedPairs = [];
-            isGameplayActive = false;
-            
-            // Limpiar
-            gameContainer.querySelectorAll('.planet').forEach(e => e.remove());
-            svgLayer.innerHTML = '';
-            
-            if (idx >= LEVELS.length) {
-                congratulateFinish();
-                return;
+        function runIntro() {
+            if (dialogueIdx < GAME_DATA.intro.length) {
+                updateDialog(GAME_DATA.intro[dialogueIdx].text);
+                document.getElementById('next-btn').onclick = () => {
+                    dialogueIdx++;
+                    runIntro();
+                };
+            } else {
+                startLevel(0);
             }
+        }
 
-            const level = LEVELS[idx];
+        function skipIntro() {
+            synth.cancel();
+            document.getElementById('skip-intro').classList.add('hidden');
+            startLevel(0);
+        }
 
-            // Renderizar Planetas
+        function startLevel(idx) {
+            currentLevelIdx = idx;
+            activeConnections = 0;
+            const level = GAME_DATA.levels[idx];
+            
+            document.getElementById('planets-container').innerHTML = '';
+            document.getElementById('svg-canvas').innerHTML = '';
+            document.getElementById('skip-intro').classList.add('hidden');
+
             level.planets.forEach(p => {
                 const el = document.createElement('div');
                 el.className = 'planet';
                 el.id = p.id;
-                el.innerHTML = `${p.emoji} <div class="thought-bubble">${p.want}</div>`;
                 el.style.left = p.x + '%';
                 el.style.top = p.y + '%';
-                // Animación de entrada
-                el.style.transform = 'translate(-50%, -50%) scale(0)';
-                setTimeout(() => el.style.transform = 'translate(-50%, -50%) scale(1)', 100 + Math.random()*300);
+                el.style.background = `radial-gradient(circle at 30% 30%, white, ${p.color})`;
+                el.innerHTML = p.emoji;
                 
-                // Eventos
-                el.addEventListener('mousedown', onDragStart);
-                el.addEventListener('touchstart', onDragStart, {passive: false});
-                
-                gameContainer.appendChild(el);
+                const bubble = document.createElement('div');
+                bubble.className = 'thought-bubble';
+                bubble.innerHTML = p.isHub ? '📢' : '❓';
+                el.appendChild(bubble);
+
+                el.addEventListener('mousedown', dragStart);
+                el.addEventListener('touchstart', dragStart, {passive: false});
+                document.getElementById('planets-container').appendChild(el);
             });
 
-            // Iniciar Narrativa
-            showDialog();
+            dialogueIdx = 0;
+            runLevelNarrative();
         }
 
-        function showDialog() {
-            const level = LEVELS[currentLevelIdx];
-            
-            // Si acabamos los diálogos, empieza el juego
-            if (dialogueStep >= level.narrative.length) {
-                dialogBox.style.display = 'none';
-                isGameplayActive = true;
-                showTutorialHand(); // Mostrar ayuda visual si es necesario
-                return;
-            }
-
-            dialogBox.style.display = 'flex';
-            const text = level.narrative[dialogueStep];
-            dialogText.textContent = text;
-            speak(text);
-
-            dialogBtn.onclick = () => {
-                dialogueStep++;
-                showDialog();
-            };
-        }
-
-        function speak(text) {
-            if (synth.speaking) synth.cancel();
-            const utter = new SpeechSynthesisUtterance(text);
-            if (voice) utter.voice = voice;
-            utter.rate = 0.9; // Un poco más lento para niños
-            utter.pitch = 1.2; // Voz más amigable
-            
-            robot.classList.add('talking');
-            utter.onend = () => robot.classList.remove('talking');
-            
-            synth.speak(utter);
-        }
-
-        function showTutorialHand() {
-            // Solo mostrar mano en el nivel 1 o si el usuario no hace nada en 5 segundos
-            if (currentLevelIdx === 0) {
-                const p1 = document.querySelector('.planet'); // Primer planeta
-                const p2 = document.querySelectorAll('.planet')[1]; // Segundo
-                
-                if(!p1 || !p2) return;
-
-                const r1 = p1.getBoundingClientRect();
-                const r2 = p2.getBoundingClientRect();
-
-                ghostHand.style.display = 'block';
-                ghostHand.style.left = (r1.left + r1.width/2 - 40) + 'px';
-                ghostHand.style.top = (r1.top + r1.height/2 - 40) + 'px';
-                
-                // Calcular distancia para la animación CSS
-                const tx = (r2.left - r1.left) + 'px';
-                const ty = (r2.top - r1.top) + 'px';
-                
-                ghostHand.style.setProperty('--tx', tx);
-                ghostHand.style.setProperty('--ty', ty);
-                ghostHand.style.animation = 'hand-drag 2s infinite';
-            }
-        }
-
-        // --- LÓGICA DEL JUEGO (DRAW TO CONNECT) ---
-
-        function onDragStart(e) {
-            if (!isGameplayActive) return;
-            e.preventDefault();
-            
-            // Ocultar tutorial si el niño toca
-            ghostHand.style.display = 'none';
-
-            const target = e.currentTarget;
-            playTone(400, 'sine'); // Sonido pop
-            target.classList.add('pop');
-            setTimeout(() => target.classList.remove('pop'), 200);
-
-            startPlanet = target.id;
-            const center = getCenter(target);
-
-            // Crear línea
-            activeLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            activeLine.setAttribute("x1", center.x);
-            activeLine.setAttribute("y1", center.y);
-            activeLine.setAttribute("x2", center.x);
-            activeLine.setAttribute("y2", center.y);
-            activeLine.classList.add("connection-line", "temp-line");
-            svgLayer.appendChild(activeLine);
-
-            document.addEventListener('mousemove', onDragMove);
-            document.addEventListener('touchmove', onDragMove, {passive: false});
-            document.addEventListener('mouseup', onDragEnd);
-            document.addEventListener('touchend', onDragEnd);
-        }
-
-        function onDragMove(e) {
-            if (!activeLine) return;
-            e.preventDefault(); // Prevenir scroll
-
-            const pt = getCoords(e);
-            activeLine.setAttribute("x2", pt.x);
-            activeLine.setAttribute("y2", pt.y);
-        }
-
-        function onDragEnd(e) {
-            document.removeEventListener('mousemove', onDragMove);
-            document.removeEventListener('touchmove', onDragMove);
-            document.removeEventListener('mouseup', onDragEnd);
-            document.removeEventListener('touchend', onDragEnd);
-
-            if (!activeLine) return;
-
-            // Detectar si soltó sobre un planeta
-            const pt = getCoords(e, true); // true = raw client coords for elementFromPoint
-            const elBelow = document.elementFromPoint(pt.cx, pt.cy);
-            const planetBelow = elBelow ? elBelow.closest('.planet') : null;
-
-            let success = false;
-
-            if (planetBelow && planetBelow.id !== startPlanet) {
-                // Validar conexión
-                const pair = [startPlanet, planetBelow.id].sort().join('-');
-                const levelData = LEVELS[currentLevelIdx];
-                const isValid = levelData.connections.some(c => [...c].sort().join('-') === pair);
-                const isDone = completedPairs.includes(pair);
-
-                if (isValid && !isDone) {
-                    success = true;
-                    // Fijar línea
-                    const c1 = getCenter(document.getElementById(startPlanet));
-                    const c2 = getCenter(planetBelow);
-                    
-                    activeLine.setAttribute("x2", c2.x);
-                    activeLine.setAttribute("y2", c2.y);
-                    activeLine.classList.remove("temp-line");
-                    
-                    completedPairs.push(pair);
-                    
-                    // Efectos de victoria
-                    spawnParticles(c2.x, c2.y);
-                    planetBelow.classList.add('pop');
-                    playSuccessTune();
-                    
-                    checkWin();
-                }
-            }
-
-            if (!success) {
-                activeLine.remove();
-                playTone(150, 'sawtooth', 0.1); // Sonido error suave
-            }
-            
-            activeLine = null;
-            startPlanet = null;
-        }
-
-        // --- UTILIDADES ---
-        function getCoords(e, raw=false) {
-            let cx, cy;
-            if (e.changedTouches) {
-                cx = e.changedTouches[0].clientX;
-                cy = e.changedTouches[0].clientY;
+        function runLevelNarrative() {
+            const level = GAME_DATA.levels[currentLevelIdx];
+            if (dialogueIdx < level.narrative.length) {
+                updateDialog(level.narrative[dialogueIdx]);
+                document.getElementById('next-btn').classList.remove('hidden');
+                document.getElementById('next-btn').onclick = () => {
+                    dialogueIdx++;
+                    runLevelNarrative();
+                };
             } else {
-                cx = e.clientX;
-                cy = e.clientY;
+                updateDialog("¡Teje la red con tu dedo!");
+                document.getElementById('next-btn').classList.add('hidden');
             }
-            if (raw) return {cx, cy};
+        }
+
+        function updateDialog(text) {
+            document.getElementById('dialog-content').textContent = text;
+            if (isVoiceEnabled) {
+                synth.cancel();
+                const utter = new SpeechSynthesisUtterance(text);
+                utter.lang = 'es-ES';
+                utter.onstart = () => document.getElementById('robot-guide').classList.add('talking');
+                utter.onend = () => document.getElementById('robot-guide').classList.remove('talking');
+                synth.speak(utter);
+            }
+        }
+
+        function toggleVoice() {
+            isVoiceEnabled = !isVoiceEnabled;
+            document.getElementById('voice-toggle').textContent = isVoiceEnabled ? '🔊' : '🔇';
+            if (!isVoiceEnabled) synth.cancel();
+        }
+
+        function dragStart(e) {
+            const touch = e.touches ? e.touches[0] : e;
+            const planet = e.target.closest('.planet');
+            if (!planet) return;
+
+            startPlanetEl = planet;
+            isDrawing = true;
+
+            tempLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            tempLine.setAttribute("class", "connection-line");
+            const pos = getCenter(planet);
+            tempLine.setAttribute("x1", pos.x);
+            tempLine.setAttribute("y1", pos.y);
+            tempLine.setAttribute("x2", pos.x);
+            tempLine.setAttribute("y2", pos.y);
+            document.getElementById('svg-canvas').appendChild(tempLine);
+
+            window.addEventListener('mousemove', dragMove);
+            window.addEventListener('touchmove', dragMove, {passive: false});
+            window.addEventListener('mouseup', dragEnd);
+            window.addEventListener('touchend', dragEnd);
+        }
+
+        function dragMove(e) {
+            if (!isDrawing) return;
+            const touch = e.touches ? e.touches[0] : e;
+            tempLine.setAttribute("x2", touch.clientX);
+            tempLine.setAttribute("y2", touch.clientY);
+        }
+
+        function dragEnd(e) {
+            window.removeEventListener('mousemove', dragMove);
+            window.removeEventListener('touchmove', dragMove);
             
-            const rect = gameContainer.getBoundingClientRect();
-            return { x: cx - rect.left, y: cy - rect.top };
+            const touch = e.changedTouches ? e.changedTouches[0] : e;
+            const targetEl = document.elementFromPoint(touch.clientX, touch.clientY);
+            const endPlanetEl = targetEl ? targetEl.closest('.planet') : null;
+
+            if (endPlanetEl && endPlanetEl !== startPlanetEl) {
+                validate(startPlanetEl, endPlanetEl);
+            } else if (tempLine) {
+                tempLine.remove();
+            }
+            isDrawing = false;
+        }
+
+        function validate(p1, p2) {
+            const level = GAME_DATA.levels[currentLevelIdx];
+            const d1 = level.planets.find(p => p.id === p1.id);
+            const d2 = level.planets.find(p => p.id === p2.id);
+
+            if (d1.target === d2.id || d2.target === d1.id) {
+                activeConnections++;
+                const pos2 = getCenter(p2);
+                tempLine.setAttribute("x2", pos2.x);
+                tempLine.setAttribute("y2", pos2.y);
+                tempLine.style.stroke = "var(--neon-blue)";
+                p1.querySelector('.thought-bubble').innerHTML = '❤️';
+                p2.querySelector('.thought-bubble').innerHTML = '❤️';
+                
+                if (activeConnections >= level.required) {
+                    setTimeout(() => {
+                        updateDialog(level.phrase);
+                        document.getElementById('next-btn').classList.remove('hidden');
+                        document.getElementById('next-btn').textContent = "Próxima Misión ▶️";
+                        document.getElementById('next-btn').onclick = () => {
+                            if (currentLevelIdx + 1 < GAME_DATA.levels.length) startLevel(currentLevelIdx + 1);
+                            else showVictory();
+                        };
+                    }, 500);
+                }
+            } else {
+                tempLine.remove();
+            }
         }
 
         function getCenter(el) {
             const r = el.getBoundingClientRect();
-            const cr = gameContainer.getBoundingClientRect();
-            return {
-                x: r.left + r.width/2 - cr.left,
-                y: r.top + r.height/2 - cr.top
-            };
+            return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
         }
 
-        function checkWin() {
-            const level = LEVELS[currentLevelIdx];
-            if (completedPairs.length === level.connections.length) {
-                isGameplayActive = false;
-                fireConfetti();
-                playWinMusic();
-                
-                setTimeout(() => {
-                    // Mostrar diálogo de victoria y botón para siguiente nivel
-                    dialogText.textContent = "¡Yupi! ¡Conectados! 🌟";
-                    dialogBtn.innerHTML = "Siguiente ▶️";
-                    dialogBtn.onclick = () => loadLevel(currentLevelIdx + 1);
-                    dialogBox.style.display = 'flex';
-                    speak("¡Yupi! ¡Lo lograste!");
-                }, 1000);
-            }
+        function showVictory() {
+            document.getElementById('ui-overlay').classList.add('hidden');
+            document.getElementById('victory-screen').classList.remove('hidden');
+            const txt = "¡Eres un Guardián increíble! Has unido a toda la galaxia y ahora todos pueden compartir y ser felices en comunidad.";
+            document.getElementById('victory-text').textContent = txt;
+            updateDialog(txt);
         }
 
-        function congratulateFinish() {
-            dialogText.textContent = "¡ERES UN MAESTRO DE LA RED! 🏆";
-            dialogBtn.innerHTML = "Jugar otra vez 🔄";
-            dialogBtn.onclick = () => location.reload();
-            dialogBox.style.display = 'flex';
-            speak("¡Felicidades! Eres un maestro de Internet. Gracias por jugar.");
-            fireConfetti();
-            setInterval(fireConfetti, 2000);
+        function resetGame() {
+            currentLevelIdx = 0;
+            dialogueIdx = 0;
+            synth.cancel();
+            document.getElementById('victory-screen').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+            document.getElementById('top-controls').classList.add('hidden');
+            document.getElementById('planets-container').innerHTML = '';
+            document.getElementById('svg-canvas').innerHTML = '';
         }
-
-        // --- EFECTOS VISUALES (JUICE) ---
-        function spawnParticles(x, y) {
-            const colors = ['#00f3ff', '#ff00cc', '#fff01f'];
-            for(let i=0; i<10; i++) {
-                const p = document.createElement('div');
-                p.className = 'particle';
-                p.style.left = x + 'px';
-                p.style.top = y + 'px';
-                p.style.width = (Math.random()*10 + 5) + 'px';
-                p.style.height = p.style.width;
-                p.style.background = colors[Math.floor(Math.random()*colors.length)];
-                
-                // Animación JS simple
-                const angle = Math.random() * Math.PI * 2;
-                const velocity = Math.random() * 100 + 50;
-                const tx = Math.cos(angle) * velocity;
-                const ty = Math.sin(angle) * velocity;
-                
-                p.animate([
-                    { transform: 'translate(0,0) scale(1)', opacity: 1 },
-                    { transform: `translate(${tx}px, ${ty}px) scale(0)`, opacity: 0 }
-                ], { duration: 800, easing: 'ease-out' });
-                
-                document.getElementById('particles-layer').appendChild(p);
-                setTimeout(() => p.remove(), 800);
-            }
-        }
-
-        // --- AUDIO PROCEDURAL (WEB AUDIO API) ---
-        let audioCtx;
-        function initAudioContext() {
-            if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-
-        function playTone(freq, type, duration=0.1) {
-            if(!audioCtx) return;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + duration);
-        }
-
-        function playSuccessTune() {
-            if(!audioCtx) return;
-            const now = audioCtx.currentTime;
-            [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => { // C Major Arpeggio
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = 'triangle';
-                osc.frequency.value = f;
-                gain.gain.setValueAtTime(0.05, now + i*0.1);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + i*0.1 + 0.3);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start(now + i*0.1);
-                osc.stop(now + i*0.1 + 0.3);
-            });
-        }
-        
-        function playWinMusic() {
-            // Melodía simple de victoria
-            if(!audioCtx) return;
-            const now = audioCtx.currentTime;
-            const notes = [523.25, 659.25, 783.99, 1046.50, 783.99, 1046.50]; 
-            notes.forEach((f, i) => {
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = 'square';
-                osc.frequency.value = f;
-                gain.gain.setValueAtTime(0.05, now + i*0.2);
-                gain.gain.linearRampToValueAtTime(0, now + i*0.2 + 0.15);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start(now + i*0.2);
-                osc.stop(now + i*0.2 + 0.2);
-            });
-        }
-
-        // --- CONFETI SIMPLE ---
-        function fireConfetti() {
-            const canvas = document.getElementById('confetti-canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            
-            const pieces = [];
-            for(let i=0; i<100; i++) {
-                pieces.push({
-                    x: canvas.width/2,
-                    y: canvas.height/2,
-                    vx: (Math.random()-0.5)*20,
-                    vy: (Math.random()-0.5)*20 - 10,
-                    color: `hsl(${Math.random()*360}, 100%, 50%)`,
-                    size: Math.random()*10 + 5
-                });
-            }
-            
-            function update() {
-                ctx.clearRect(0,0, canvas.width, canvas.height);
-                let alive = false;
-                pieces.forEach(p => {
-                    p.x += p.vx;
-                    p.y += p.vy;
-                    p.vy += 0.5; // Gravedad
-                    ctx.fillStyle = p.color;
-                    ctx.fillRect(p.x, p.y, p.size, p.size);
-                    if(p.y < canvas.height) alive = true;
-                });
-                if(alive) requestAnimationFrame(update);
-                else ctx.clearRect(0,0, canvas.width, canvas.height);
-            }
-            update();
-        }
-
-        // Redimensionar SVG al cambiar ventana
-        window.addEventListener('resize', () => {
-            document.getElementById('connections-layer').setAttribute('viewBox', `0 0 ${window.innerWidth} ${window.innerHeight}`);
-        });
-
     </script>
 </body>
 </html>
